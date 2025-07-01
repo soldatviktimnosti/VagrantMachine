@@ -38,6 +38,6 @@ git clone "$ANSIBLE_REPO" ansible || fail "Failed to clone Ansible repo"
 cd ansible || exit
 
 echo "=== Running Ansible playbook ==="
-ansible-playbook -i inventory.ini site.yml || fail "Ansible playbook failed"
+ansible-playbook -i hosts.ini playbook1.yml || fail "Ansible playbook failed"
 
 echo "=== Deployment completed successfully ==="
