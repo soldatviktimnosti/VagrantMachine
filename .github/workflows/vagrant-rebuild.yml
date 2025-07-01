@@ -10,6 +10,19 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Save SSH keys
+        run: |
+          # Создаем папку .ssh
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          # Восстанавливаем публичный ключ (для Vagrant)
+          echo "${{ secrets.VAGRANT_SSH_PUB_KEY }}" | base64 -d > ~/.ssh/vagrant_ansible_key.pub
+          chmod 644 ~/.ssh/vagrant_ansible_key.pub
+
+          # Восстанавливаем приватный ключ (для Ansible)
+          echo "${{ secrets.VAGRANT_SSH_PRIV_KEY }}" | base64 -d > ~/.ssh/vagrant_ansible_key
+          chmod 600 ~/.ssh/vagrant_ansible_key
 
       - name: Install Vagrant and VirtualBox
         run: |
