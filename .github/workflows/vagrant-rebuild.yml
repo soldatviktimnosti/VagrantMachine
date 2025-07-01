@@ -1,0 +1,22 @@
+name: Rebuild Vagrant Cluster
+on:
+  push:
+    paths:
+      - 'Vagrantfile'  # Запуск только при изменении Vagrantfile
+
+jobs:
+  rebuild-vagrant:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Vagrant and VirtualBox
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y vagrant virtualbox
+
+      - name: Start and provision VMs
+        run: |
+          vagrant destroy -f || true  # Игнорируем ошибки, если VM нет
+          vagrant up
