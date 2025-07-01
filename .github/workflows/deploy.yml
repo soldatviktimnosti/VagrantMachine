@@ -1,0 +1,57 @@
+name: Deploy K3s Cluster
+
+on:
+  push:
+    paths: [Vagrantfile]
+  workflow_dispatch:
+
+jobs:
+  deploy-vms:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Start VMs
+        run: |
+          vagrant destroy -f || true
+          vagrant up
+          
+      - name: Generate Ansible Inventory
+        run: |
+          echo "[control-plane]" > inventory.ini
+          vagrant ssh-config node1 | awk '/HostName/ {print $2}' >> inventory.ini
+          echo "[workers]" >> inventory.ini
+          vagrant ssh-config node2 | awk '/HostName/ {print $2}' >> inventory.ini
+          vagrant ssh-config node3 | awk '/HostName/ {print $2}' >> inventory.ini
+          cat inventory.ini
+          
+      - name: Run Ansible Playbook
+        uses: ansible/ansible-runner-action@v1
+        with:
+          playbook: https://github.com/yourname/infra-ansible/main.yml
+          inventory: inventory.ini
+          extra_vars: |
+            k3s_version: v1.26.5+k3s1
+
+name: Deploy Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      vagrant_repo:
+        description: 'git@github.com:soldatviktimnosti/VagrantMachine.git'
+        required: true
+      ansible_repo:
+        description: 'git@github.com:soldatviktimnosti/ansible.git'
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run deployment script
+        run: |
+          chmod +x deploy_infra.sh
+          ./deploy_infra.sh "${{ github.event.inputs.vagrant_repo }}" "${{ github.event.inputs.ansible_repo }}"
