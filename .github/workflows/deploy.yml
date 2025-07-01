@@ -18,18 +18,18 @@ jobs:
           
       - name: Generate Ansible Inventory
         run: |
-          echo "[control-plane]" > inventory.ini
-          vagrant ssh-config node1 | awk '/HostName/ {print $2}' >> inventory.ini
-          echo "[workers]" >> inventory.ini
-          vagrant ssh-config node2 | awk '/HostName/ {print $2}' >> inventory.ini
-          vagrant ssh-config node3 | awk '/HostName/ {print $2}' >> inventory.ini
-          cat inventory.ini
+          echo "[control-plane]" > hosts.ini
+          vagrant ssh-config node1 | awk '/HostName/ {print $2}' >> hosts.ini
+          echo "[workers]" >> hosts.ini
+          vagrant ssh-config node2 | awk '/HostName/ {print $2}' >> hosts.ini
+          vagrant ssh-config node3 | awk '/HostName/ {print $2}' >> hosts.ini
+          cat hosts.ini
           
       - name: Run Ansible Playbook
         uses: ansible/ansible-runner-action@v1
         with:
           playbook: https://github.com/yourname/infra-ansible/main.yml
-          inventory: inventory.ini
+          inventory: hosts.ini
           extra_vars: |
             k3s_version: v1.26.5+k3s1
 
