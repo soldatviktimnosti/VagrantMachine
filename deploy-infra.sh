@@ -27,6 +27,8 @@ git clone "$VAGRANT_REPO" vagrant || fail "Failed to clone Vagrant repo"
 cd vagrant || exit
 
 echo "=== Starting Vagrant VMs ==="
+vboxmanage list vms | grep -E "node[1-3]" | awk '{print $1}' | xargs -I {} vboxmanage unregister
+vm {} --delete 2>/dev/null || true
 vagrant destroy -f || echo "No existing VMs to destroy"
 vagrant up || fail "Vagrant up failed"
 
