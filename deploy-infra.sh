@@ -27,8 +27,35 @@ git clone "$VAGRANT_REPO" vagrant || fail "Failed to clone Vagrant repo"
 cd vagrant || exit
 
 echo "=== Starting Vagrant VMs ==="
-vboxmanage list vms | grep -E "node[1-3]" | awk '{print $1}' | tr -d '"' | xargs -I {} vboxmanage unregistervm "{}" --delete 2>/dev/null || true
-vagrant destroy -f || echo "No existing VMs to destroy"
+# Убиваем все процессы VirtualBox (жестко)
+sudo pkill -9 -f "VBox" || true  # Linux/Mac
+sudo pkill -9 -f "vagrant" || true
+sudo systemctl stop vboxdrv vboxweb-service vboxautostart-service 2>/dev/null || true
+
+# Принудительно удаляем ВМ через их UUID
+vboxmanage list vms | grep -E "node[1-3]" | awk '{print $2}' | tr -d '{}' | while read uuid; do
+    echo "Удаляем машину с UUID $uuid"
+    vboxmanage controlvm "$uuid" poweroff 2>/dev/null || true
+    vboxmanage unregistervm "$uuid" --delete 2>/dev/null || true
+done
+
+# Чистим файловые следы
+sudo rm -rf \
+    ~/"VirtualBox VMs/node"* \
+    /tmp/.vbox-*-ipc \
+    ~/.config/VirtualBox/* \
+    ~/.vagrant.d/tmp/*
+
+
+# Перезапускаем сервис VirtualBox
+sudo systemctl restart vboxdrv  # Для Linux
+sleep 5 
+
+# Чистка кеша Vagrant
+vagrant global-status --prune
+rm -rf .vagrant/
+
+
 vagrant up || fail "Vagrant up failed"
 
 # 2. Клонируем и выполняем Ansible репозиторий
