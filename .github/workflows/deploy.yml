@@ -28,7 +28,7 @@ jobs:
       - name: Run Ansible Playbook
         uses: ansible/ansible-runner-action@v1
         with:
-          playbook: https://github.com/yourname/infra-ansible/main.yml
+          playbook: https://github.com/soldatviktimnosti/ansible/main/playbook1.yml
           inventory: hosts.ini
           extra_vars: |
             k3s_version: v1.26.5+k3s1
