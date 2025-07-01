@@ -13,7 +13,7 @@ jobs:
 
       - name: Cleanup old VMs
         run: |
-          vboxmanage list vms | grep -E "node[1-3]" | awk '{print $1}' | xargs -I {} vboxmanage unregistervm {} --delete || true
+          vboxmanage list vms | grep -E "node[1-3]" | awk '{print $1}' | tr -d '"' | xargs -I {} vboxmanage unregistervm "{}" --delete 2>/dev/null || true
       - name: Start VMs
         run: |
           vagrant destroy -f || true
