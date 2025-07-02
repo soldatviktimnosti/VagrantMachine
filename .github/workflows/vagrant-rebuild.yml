@@ -28,9 +28,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y vagrant virtualbox ansible
-          
+
       - name: Run deployment script
         run: |
           chmod +x deploy_infra.sh
-          ./deploy_infra.sh "${{ github.event.inputs.vagrant_repo }}" "${{ github.event.inputs.ansible_repo }}"
+          ./deploy_infra.sh "git@github.com:soldatviktimnosti/VagrantMachine.git" "git@github.com:soldatviktimnosti/ansible.git"
 
