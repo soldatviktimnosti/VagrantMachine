@@ -58,31 +58,69 @@ rm -rf .vagrant/
 
 vagrant up || fail "Vagrant up failed"
 
-echo "=== Restoring Vagrant metadata ==="
+# Проверка, что все ноды запущены
+for node in node1 node2 node3; do
+    if ! vagrant status "$node" | grep -q "running"; then
+        fail "VM $node failed to start"
+    fi
+done
 
-# Функция для восстановления метаданных
+# Настройка репозиториев с улучшенной обработкой ошибок
+configure_repositories() {
+    local node=$1
+    echo "Configuring repositories for $node"
+    
+    # Копируем оригинальный sources.list для резервной копии
+    vagrant ssh "$node" -c "sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak" || true
+    
+    # Замена зеркала с проверкой
+    if ! vagrant ssh "$node" -c "sudo sed -i 's/us.archive.ubuntu.com/mirrors.kernel.org/g' /etc/apt/sources.list"; then
+        echo "Warning: Failed to update sources.list on $node"
+        return 1
+    fi
+    
+    # Обновление apt с таймаутом
+    if ! vagrant ssh "$node" -c "timeout 60 sudo apt-get update"; then
+        echo "Warning: apt-get update failed on $node"
+        return 1
+    fi
+    
+    return 0
+}
+
+for node in node1 node2 node3; do
+    configure_repositories "$node" || true
+done
+
+# Восстановление метаданных Vagrant с улучшениями
 restore_vagrant_metadata() {
     local vm_name=$1
     
     echo "Restoring metadata for $vm_name"
     
-    # Получаем UUID из VirtualBox
-    uuid=$(VBoxManage list vms | grep "\"$vm_name\"" | awk '{print $2}' | tr -d '{}')
+    # Получаем UUID с проверкой ошибок
+    uuid=$(VBoxManage list vms | grep "\"$vm_name\"" | awk '{print $2}' | tr -d '{}' 2>/dev/null)
     
     if [ -z "$uuid" ]; then
         echo "Error: Could not find UUID for $vm_name"
         return 1
     fi
     
-    # Создаем структуру каталогов
-    mkdir -p ".vagrant/machines/$vm_name/virtualbox"
+    # Создаем структуру каталогов с проверкой прав
+    if ! mkdir -p ".vagrant/machines/$vm_name/virtualbox"; then
+        echo "Error: Failed to create metadata directory for $vm_name"
+        return 1
+    fi
     
-    # Записываем UUID
-    echo "$uuid" > ".vagrant/machines/$vm_name/virtualbox/id"
-    
-    # Проверяем запись
-    if [ "$(cat ".vagrant/machines/$vm_name/virtualbox/id")" != "$uuid" ]; then
+    # Записываем UUID с проверкой
+    if ! echo "$uuid" > ".vagrant/machines/$vm_name/virtualbox/id"; then
         echo "Error: Failed to write UUID for $vm_name"
+        return 1
+    fi
+    
+    # Валидация записи
+    if [ "$(cat ".vagrant/machines/$vm_name/virtualbox/id" 2>/dev/null)" != "$uuid" ]; then
+        echo "Error: UUID verification failed for $vm_name"
         return 1
     fi
     
@@ -90,15 +128,35 @@ restore_vagrant_metadata() {
     return 0
 }
 
-# Восстанавливаем для всех нод
+# Восстанавливаем метаданные для всех нод
+metadata_restored=0
 for node in node1 node2 node3; do
-    restore_vagrant_metadata "$node" || true
+    if restore_vagrant_metadata "$node"; then
+        ((metadata_restored++))
+    fi
 done
 
-# Проверяем подключение к основной ноде
-if ! vagrant ssh node1 -- echo "Vagrant connection test"; then
-    echo "Warning: Vagrant SSH still not working after metadata restoration"
+# Проверка подключения с таймаутом
+connection_test() {
+    timeout 10 vagrant ssh node1 -- echo "Vagrant connection successful" 2>/dev/null
+    return $?
+}
+
+if connection_test; then
+    echo "Vagrant connection verified"
+else
+    echo "Warning: Vagrant SSH connection issues detected"
+    
+    # Дополнительная диагностика
+    echo "Checking VirtualBox VM status:"
+    VBoxManage list runningvms
+    
+    echo "Checking Vagrant status:"
+    vagrant status
+    
+    fail "Failed to establish Vagrant SSH connection after metadata restoration"
 fi
+
 
 # 2. Клонируем и выполняем Ansible репозиторий
 echo "=== Cloning Ansible repo ==="
