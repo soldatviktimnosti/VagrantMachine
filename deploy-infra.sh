@@ -59,6 +59,10 @@ sync_vagrant_metadata() {
     chmod 755 "$VAGRANT_DIR"
     # Принудительно обновляем глобальный статус
     vagrant global-status --prune
+    cat > .vagrant_env <<EOF
+export VAGRANT_CWD="$PROJECT_ROOT"
+alias vstatus="cd $PROJECT_ROOT && vagrant status"
+EOF
 
     # Проверяем, что ВМ видны
     if ! vagrant status | grep -q "running"; then
@@ -69,6 +73,13 @@ sync_vagrant_metadata() {
     source ~/.bashrc
     # Можно также сохранить копию метаданных (на всякий случай)
     cp -r .vagrant ../vagrant_metadata_backup 2>/dev/null || true
+    echo "export VAGRANT_CWD='$(pwd)'" > .vagrantrc
+    echo "source .vagrantrc" >> ~/.bashrc
+    source .vagrant_env
+    echo "source $PROJECT_ROOT/.vagrant_env" >> ~/.bashrc
+    
+    # Проверка
+    echo "Текущий контекст:"
 }
 
 
