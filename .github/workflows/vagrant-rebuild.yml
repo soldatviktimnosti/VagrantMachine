@@ -24,12 +24,13 @@ jobs:
           echo "${{ secrets.VAGRANT_SSH_PRIV_KEY }}" | base64 -d > ~/.ssh/vagrant_ansible_key
           chmod 600 ~/.ssh/vagrant_ansible_key
 
-      - name: Install Vagrant and VirtualBox
+      - name: Install Vagrant and VirtualBox and Ansible
         run: |
           sudo apt-get update
-          sudo apt-get install -y vagrant virtualbox
-
-      - name: Start and provision VMs
+          sudo apt-get install -y vagrant virtualbox ansible
+          
+      - name: Run deployment script
         run: |
-          vagrant destroy -f || true  # Игнорируем ошибки, если VM нет
-          vagrant up
+          chmod +x deploy_infra.sh
+          ./deploy_infra.sh "${{ github.event.inputs.vagrant_repo }}" "${{ github.event.inputs.ansible_repo }}"
+

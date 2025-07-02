@@ -48,20 +48,13 @@ cleanup_vagrant
 vagrant up || fail "Vagrant up failed"
 
 
-sync_vagrant_metadata() {
+status() {
     echo "=== Синхронизация метаданных Vagrant ==="
     local VAGRANT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     cd "$VAGRANT_DIR" || exit 1
-    chmod 755 "$VAGRANT_DIR"
-    # Принудительно обновляем глобальный статус
+
     vagrant global-status --prune
-    echo "Создаём ~/.vagrant_env с содержимым:"
-    echo "export VAGRANT_CWD=\"$VAGRANT_DIR\""
-    echo "alias vstatus=\"cd $VAGRANT_DIR && vagrant status\""
-    cat > ~/.vagrant_env <<EOF
-export VAGRANT_CWD="$VAGRANT_DIR"
-alias vstatus="cd $VAGRANT_DIR && vagrant status"
-EOF
+ 
 
     # Проверяем, что ВМ видны
     if ! vagrant status | grep -q "running"; then
@@ -69,22 +62,12 @@ EOF
         exit 1
     fi
 
-    if ! grep -qF "source ~/.vagrant_env" ~/.bashrc; then
-        echo "source ~/.vagrant_env" >> ~/.bashrc
-    fi
 
-    # Применяем сразу
-    source ~/.vagrant_env
 
-    echo "VAGRANT_CWD установлен в: $VAGRANT_DIR"
-    echo "Теперь можешь использовать команду 'vstatus' в любом терминале"
-    
-    # Проверка
-    echo "Текущий контекст:"
 }
 
 # Фиксируем состояние (если нужно)
-sync_vagrant_metadata
+status
 
 
 
