@@ -54,8 +54,9 @@ sync_vagrant_metadata
 
 sync_vagrant_metadata() {
     echo "=== Синхронизация метаданных Vagrant ==="
-    local VAGRANT_DIR=$(realpath "$(dirname "$0")/.vagrant")
+    local VAGRANT_DIR=$(realpath "$(dirname "$0")")
     cd "$VAGRANT_DIR" || exit 1
+    chmod 755 "$VAGRANT_DIR"
     # Принудительно обновляем глобальный статус
     vagrant global-status --prune
 
@@ -72,7 +73,7 @@ sync_vagrant_metadata() {
 
 
 echo "=== Готово! Состояние ВМ: ==="
-vagrant status --vagrantfile ~/VMGitops/vagrant/Vagrantfile
+vagrant status 
 
 
 # 2. Клонируем и выполняем Ansible репозиторий
