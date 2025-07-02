@@ -69,14 +69,17 @@ EOF
         echo "Ошибка: ВМ не обнаружены в состоянии 'running'"
         exit 1
     fi
-    echo "export VAGRANT_CWD=$VAGRANT_DIR" >> ~/.bashrc
-    source ~/.bashrc
-    # Можно также сохранить копию метаданных (на всякий случай)
-    cp -r .vagrant ../vagrant_metadata_backup 2>/dev/null || true
-    echo "export VAGRANT_CWD='$(pwd)'" > .vagrantrc
-    echo "source .vagrantrc" >> ~/.bashrc
-    source .vagrant_env
-    echo "source $PROJECT_ROOT/.vagrant_env" >> ~/.bashrc
+    echo "export VAGRANT_CWD=\"$VAGRANT_DIR\"" > ~/.vagrant_env
+    echo "alias vstatus='cd \"$VAGRANT_DIR\" && vagrant status'" >> ~/.vagrant_env
+    if ! grep -qF "source ~/.vagrant_env" ~/.bashrc; then
+        echo "source ~/.vagrant_env" >> ~/.bashrc
+    fi
+
+    # Применяем сразу
+    source ~/.vagrant_env
+
+    echo "VAGRANT_CWD установлен в: $VAGRANT_DIR"
+    echo "Теперь можешь использовать команду 'vstatus' в любом терминале"
     
     # Проверка
     echo "Текущий контекст:"
