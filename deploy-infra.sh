@@ -48,10 +48,6 @@ cleanup_vagrant
 vagrant up || fail "Vagrant up failed"
 
 
-# Фиксируем состояние (если нужно)
-sync_vagrant_metadata
-
-
 sync_vagrant_metadata() {
     echo "=== Синхронизация метаданных Vagrant ==="
     local VAGRANT_DIR=$(realpath "$(dirname "$0")")
@@ -60,8 +56,8 @@ sync_vagrant_metadata() {
     # Принудительно обновляем глобальный статус
     vagrant global-status --prune
     cat > .vagrant_env <<EOF
-export VAGRANT_CWD="$PROJECT_ROOT"
-alias vstatus="cd $PROJECT_ROOT && vagrant status"
+export VAGRANT_CWD="$VAGRANT_DIR"
+alias vstatus="cd $VAGRANT_DIR && vagrant status"
 EOF
 
     # Проверяем, что ВМ видны
@@ -69,8 +65,7 @@ EOF
         echo "Ошибка: ВМ не обнаружены в состоянии 'running'"
         exit 1
     fi
-    echo "export VAGRANT_CWD=\"$VAGRANT_DIR\"" > ~/.vagrant_env
-    echo "alias vstatus='cd \"$VAGRANT_DIR\" && vagrant status'" >> ~/.vagrant_env
+
     if ! grep -qF "source ~/.vagrant_env" ~/.bashrc; then
         echo "source ~/.vagrant_env" >> ~/.bashrc
     fi
@@ -84,6 +79,11 @@ EOF
     # Проверка
     echo "Текущий контекст:"
 }
+
+# Фиксируем состояние (если нужно)
+sync_vagrant_metadata
+
+
 
 
 echo "=== Готово! Состояние ВМ: ==="
