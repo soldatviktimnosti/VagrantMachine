@@ -50,11 +50,14 @@ vagrant up || fail "Vagrant up failed"
 
 sync_vagrant_metadata() {
     echo "=== Синхронизация метаданных Vagrant ==="
-    local VAGRANT_DIR=$(realpath "$(dirname "$0")")
+    local VAGRANT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     cd "$VAGRANT_DIR" || exit 1
     chmod 755 "$VAGRANT_DIR"
     # Принудительно обновляем глобальный статус
     vagrant global-status --prune
+    echo "Создаём ~/.vagrant_env с содержимым:"
+    echo "export VAGRANT_CWD=\"$VAGRANT_DIR\""
+    echo "alias vstatus=\"cd $VAGRANT_DIR && vagrant status\""
     cat > ~/.vagrant_env <<EOF
 export VAGRANT_CWD="$VAGRANT_DIR"
 alias vstatus="cd $VAGRANT_DIR && vagrant status"
