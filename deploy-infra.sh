@@ -54,6 +54,8 @@ sync_vagrant_metadata
 
 sync_vagrant_metadata() {
     echo "=== Синхронизация метаданных Vagrant ==="
+    local VAGRANT_DIR=$(realpath "$(dirname "$0")/.vagrant")
+    cd "$VAGRANT_DIR" || exit 1
     # Принудительно обновляем глобальный статус
     vagrant global-status --prune
 
@@ -62,14 +64,15 @@ sync_vagrant_metadata() {
         echo "Ошибка: ВМ не обнаружены в состоянии 'running'"
         exit 1
     fi
-
+    echo "export VAGRANT_CWD=$VAGRANT_DIR" >> ~/.bashrc
+    source ~/.bashrc
     # Можно также сохранить копию метаданных (на всякий случай)
     cp -r .vagrant ../vagrant_metadata_backup 2>/dev/null || true
 }
 
 
 echo "=== Готово! Состояние ВМ: ==="
-vagrant status
+vagrant status --vagrantfile ~/VMGitops/vagrant/Vagrantfile
 
 
 # 2. Клонируем и выполняем Ansible репозиторий
