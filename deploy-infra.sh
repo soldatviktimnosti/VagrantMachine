@@ -58,6 +58,48 @@ rm -rf .vagrant/
 
 vagrant up || fail "Vagrant up failed"
 
+echo "=== Restoring Vagrant metadata ==="
+
+# Функция для восстановления метаданных
+restore_vagrant_metadata() {
+    local vm_name=$1
+    
+    echo "Restoring metadata for $vm_name"
+    
+    # Получаем UUID из VirtualBox
+    uuid=$(VBoxManage list vms | grep "\"$vm_name\"" | awk '{print $2}' | tr -d '{}')
+    
+    if [ -z "$uuid" ]; then
+        echo "Error: Could not find UUID for $vm_name"
+        return 1
+    fi
+    
+    # Создаем структуру каталогов
+    mkdir -p ".vagrant/machines/$vm_name/virtualbox"
+    
+    # Записываем UUID
+    echo "$uuid" > ".vagrant/machines/$vm_name/virtualbox/id"
+    
+    # Проверяем запись
+    if [ "$(cat ".vagrant/machines/$vm_name/virtualbox/id")" != "$uuid" ]; then
+        echo "Error: Failed to write UUID for $vm_name"
+        return 1
+    fi
+    
+    echo "Successfully restored metadata for $vm_name"
+    return 0
+}
+
+# Восстанавливаем для всех нод
+for node in node1 node2 node3; do
+    restore_vagrant_metadata "$node" || true
+done
+
+# Проверяем подключение к основной ноде
+if ! vagrant ssh node1 -- echo "Vagrant connection test"; then
+    echo "Warning: Vagrant SSH still not working after metadata restoration"
+fi
+
 # 2. Клонируем и выполняем Ansible репозиторий
 echo "=== Cloning Ansible repo ==="
 cd "$WORK_DIR" || exit
