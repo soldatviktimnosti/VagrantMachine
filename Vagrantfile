@@ -13,7 +13,7 @@ Vagrant.configure(2) do |config|
   # Kubernetes Nodes
   (1..NodeCount).each do |i|
     config.vm.define "node#{i}" do |node|
-      node.vm.box = "bento/ubuntu-20.04"
+      node.vm.box = "ubuntu/jammy64"
       node.vm.hostname = "node#{i}.example.com"
       node.vm.network "private_network", ip: "192.168.56.10#{i}"
       node.vm.provision "file", source: "~/.ssh/vagrant_ansible_key.pub", destination: "/tmp/authorized_keys"
