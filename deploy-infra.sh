@@ -55,7 +55,7 @@ sync_vagrant_metadata() {
     chmod 755 "$VAGRANT_DIR"
     # Принудительно обновляем глобальный статус
     vagrant global-status --prune
-    cat > .vagrant_env <<EOF
+    cat > ~/.vagrant_env <<EOF
 export VAGRANT_CWD="$VAGRANT_DIR"
 alias vstatus="cd $VAGRANT_DIR && vagrant status"
 EOF
