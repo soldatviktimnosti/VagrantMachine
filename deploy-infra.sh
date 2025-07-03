@@ -51,7 +51,7 @@ vagrant up || fail "Vagrant up failed"
 
 sync_vagrant_metadata() {
     echo "=== Синхронизация метаданных Vagrant ==="
-    local VAGRANT_DIR= "$(dirname "${BASH_SOURCE[0]}")"
+    local VAGRANT_DIR="$(dirname "${BASH_SOURCE[0]}")"
     cd "$VAGRANT_DIR" || exit 1
     chmod 755 "$VAGRANT_DIR"
     # Принудительно обновляем глобальный статус
