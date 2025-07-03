@@ -43,7 +43,7 @@ cleanup_vagrant
 
 
 
-
+echo "=== Запускаю ВМ ==="
 # Запуск ВМ
 vagrant up || fail "Vagrant up failed"
 
