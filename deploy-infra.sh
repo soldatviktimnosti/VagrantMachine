@@ -8,7 +8,7 @@ ANSIBLE_REPO=$2
 [ -z "$VAGRANT_REPO" ] || [ -z "$ANSIBLE_REPO" ] && { echo "Usage: $0 <vagrant_repo_url> <ansible_repo_url>"; exit 1; }
 
 # Временная директория
-WORK_DIR="/tmp/infra_deploy_$(date +%s)"
+WORK_DIR="/tmp/infra_deploy"
 mkdir -p "$WORK_DIR" && cd "$WORK_DIR" || exit 1
 
 # Функция для обработки ошибок
@@ -37,6 +37,7 @@ cleanup_vagrant() {
         
     vagrant global-status --prune
     rm -rf .vagrant/
+    rm -rf $WORK_DIR
     unset VAGRANT_CWD
     sleep 5
 }
@@ -51,17 +52,16 @@ vagrant up || fail "Vagrant up failed"
 
 sync_vagrant_metadata() {
     echo "=== Синхронизация метаданных Vagrant ==="
-    local VAGRANT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    cd "$VAGRANT_DIR" || exit 1
-    chmod 755 "$VAGRANT_DIR"
+    cd "$WORK_DIR" || exit 1
+    chmod 755 "$WORK_DIR"
     # Принудительно обновляем глобальный статус
     vagrant global-status --prune
     echo "Создаём ~/.vagrant_env с содержимым:"
-    echo "export VAGRANT_CWD=\"$VAGRANT_DIR\""
-    echo "alias vstatus=\"cd $VAGRANT_DIR && vagrant status\""
+    echo "export VAGRANT_CWD=\"$WORK_DIR\""
+    echo "alias vstatus=\"cd $WORK_DIR && vagrant status\""
     cat > ~/.vagrant_env <<EOF
-export VAGRANT_CWD="$VAGRANT_DIR"
-alias vstatus="cd $VAGRANT_DIR && vagrant status"
+export VAGRANT_CWD="$WORK_DIR"
+alias vstatus="cd $WORK_DIR && vagrant status"
 EOF
 
 
@@ -86,7 +86,6 @@ sync_vagrant_metadata
 
 
 echo "=== Готово! Состояние ВМ: ==="
-source ~/.vagrant_env
 vagrant status 
 
 
