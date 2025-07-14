@@ -1,1 +1,1 @@
-![Logseq Graph](./images/logseq_моя инфраструктура.png)
+![Logseq Graph](./images/logseq_моя%20инфраструктура.png)
