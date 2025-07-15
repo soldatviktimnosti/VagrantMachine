@@ -13,9 +13,9 @@ Vagrant.configure(2) do |config|
 
   # ArgoCD ports
   config.vm.define "node1" do |node|
-    node.vm.hostname = "node1.example.com"
+    node.vm.hostname = "node1"
+    node.vm.network "public_network"
     node.vm.network "private_network", ip: "192.168.56.101"
-    
     # Проброс портов для доступа к ArgoCD с хоста
     node.vm.network "forwarded_port", 
       guest: 30080,  # HTTP NodePort
@@ -41,7 +41,7 @@ Vagrant.configure(2) do |config|
   # node2 и node3
   (2..NodeCount).each do |i|
     config.vm.define "node#{i}" do |node|
-      node.vm.hostname = "node#{i}.example.com"
+      node.vm.hostname = "node#{i}"
       node.vm.network "private_network", ip: "192.168.56.10#{i}"
       
       node.vm.provider "virtualbox" do |v|
