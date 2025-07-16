@@ -14,7 +14,9 @@ Vagrant.configure(2) do |config|
   # ArgoCD ports
   config.vm.define "node1" do |node|
     node.vm.hostname = "node1"
-    node.vm.network "public_network"
+    node.vm.network "public_network",
+      bridge: "wlp7s0",
+      auto_config: false
     node.vm.network "private_network", ip: "192.168.56.101"
     # Проброс портов для доступа к ArgoCD с хоста
     node.vm.network "forwarded_port", 
